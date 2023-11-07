@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firebase Phone Authentication</title>
+<style>
+    body { font-family: Arial, sans-serif; }
+#sign-in-container { margin: 20px; }
+#phone-number { margin-right: 10px; }
+
+</style>
+</head>
+<body>
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signup/Login Modal</title>
+</head>
+<body>
+
+<!-- Signup/Login Button -->
+<button id="open-dialog-btn">Signup/Login</button>
+
+<!-- Dialog Modal -->
+<dialog id="sign-in-dialog">
+  <form method="dialog">
+    <div id="sign-in-container">
+      <input type="text" id="phone-number" placeholder="Enter phone number">
+      <button type="button" id="sign-in-button">Send OTP</button>
+    </div>
+    <menu>
+      <button id="close-dialog-btn">Close</button>
+    </menu>
+  </form>
+</dialog>
+
+
+
+
+<div id="sign-in-container">
+  <input type="text" id="phone-number" placeholder="Enter phone number">
+  <button id="sign-in-button">Send OTP</button>
+</div>
+
+<!-- The div below is where the reCAPTCHA would be rendered -->
+<div id="recaptcha-container"></div>
+
+<!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+
+<!-- Add Firebase products that you want to use -->
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+<script>
+    // Get the dialog element and the open button
+    const dialog = document.getElementById('sign-in-dialog');
+    const openDialogBtn = document.getElementById('open-dialog-btn');
+    const closeDialogBtn = document.getElementById('close-dialog-btn');
+  
+    // Event listener to open the dialog
+    openDialogBtn.addEventListener('click', () => {
+      dialog.showModal(); // This method opens the dialog
+    });
+  
+    // Event listener to close the dialog
+    closeDialogBtn.addEventListener('click', () => {
+      dialog.close(); // This method closes the dialog
+    });
+  </script>
+<script>
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDxZc7l09MGgF9m2APde3z3COoaAsiYcFA",
+      authDomain: "bpreadings2024.firebaseapp.com",
+      projectId: "bpreadings2024",
+      storageBucket: "bpreadings2024.appspot.com",
+      messagingSenderId: "462986345639",
+      appId: "1:462986345639:web:74c7d1c5bac6d92028ef82",
+      measurementId: "G-ZN40201FEW"
+  };
+
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+console.log("Firebase app initialized!");
+
+// Reference to the auth service
+const auth = firebase.auth();
+
+// Function to send OTP
+function sendOTP(phoneNumber) {
+  let appVerifier = window.recaptchaVerifier;
+  
+  auth.signInWithPhoneNumber(phoneNumber, appVerifier)
+    .then((confirmationResult) => {
+      console.log("OTP sent.");
+      // SMS sent. Prompt user to type the code from the message
+      let code = window.prompt('Enter the OTP');
+      
+      confirmationResult.confirm(code).then((result) => {
+        // User signed in successfully.
+        console.log("User signed in successfully.");
+        const user = result.user;
+        // You can now ask the user for more profile details and save it to your database
+      }).catch((error) => {
+        // User couldn't sign in (bad verification code?)
+        console.error("Error during confirmation: ", error);
+      });
+    }).catch((error) => {
+      // Error; SMS not sent
+      console.error("Error during sign-in: ", error);
+    });
+}
+
+// This is needed for the reCAPTCHA
+window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('sign-in-button', {
+  'size': 'invisible',
+  'callback': (response) => {
+    console.log("reCAPTCHA solved, allow signInWithPhoneNumber.");
+    sendOTP(phoneNumber);
+  }
+});
+
+// Assuming you have an HTML element with id="sign-in-button"
+document.getElementById('sign-in-button').addEventListener('click', () => {
+  let phoneNumber = document.getElementById('phone-number').value;
+  console.log("Sending OTP to " + phoneNumber);
+  sendOTP(phoneNumber);
+});
+
+</script>
+</body>
+</html>
